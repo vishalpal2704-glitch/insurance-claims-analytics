@@ -4,7 +4,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Motor Insurance Claims Analytics", layout="wide")
 
-FREQ_PATH = "freMTPL2freq.xlsx"
+FREQ_PATH = "freMTPL2freq.csv.gz"
 SEV_PATH = "freMTPL2sev.csv"
 
 
