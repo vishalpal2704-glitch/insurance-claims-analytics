@@ -80,8 +80,8 @@ k[2].metric("Claim frequency", f"{claims / exp:.1%}", help="Claims per policy-ye
 k[3].metric("Total claim cost (EUR)", f"{loss:,.0f}")
 k[4].metric("Pure premium (EUR/yr)", f"{loss / exp:,.0f}", help="Claim cost per policy-year of exposure")
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["Overview", "Risk drivers", "Geography", "Insights & Recommendations", "Data & Method"])
+tab1, tab2, tab3, tab6, tab4, tab5 = st.tabs(
+    ["Overview", "Risk drivers", "Geography", "More charts", "Insights & Recommendations", "Data & Method"])
 
 
 def bar_pair(col, title):
@@ -122,6 +122,57 @@ with tab3:
     st.plotly_chart(px.bar(g, x="Region", y="Pure Premium", hover_data=["Exposure", "Claims"],
                            title="Pure premium by region (EUR per policy-year)"), width="stretch")
     st.caption("Regions with very low exposure (e.g. Champagne-Ardenne, Alsace, Franche-Comte) have volatile results.")
+
+with tab6:
+    st.subheader("Trends (line charts)")
+    a, b = st.columns(2)
+    g = summarise(f, "DrivAge")
+    a.plotly_chart(px.line(g, x="DrivAge", y="Claim Frequency", title="Claim frequency by driver age",
+                           labels={"DrivAge": "Driver age", "Claim Frequency": "Claims per policy-year"}), width="stretch")
+    b.plotly_chart(px.line(g, x="DrivAge", y="Pure Premium", title="Pure premium by driver age",
+                           labels={"DrivAge": "Driver age", "Pure Premium": "EUR per policy-year"}), width="stretch")
+    a, b = st.columns(2)
+    g = summarise(f, "VehAge")
+    a.plotly_chart(px.line(g, x="VehAge", y="Claim Frequency", markers=True, title="Claim frequency by vehicle age",
+                           labels={"VehAge": "Vehicle age", "Claim Frequency": "Claims per policy-year"}), width="stretch")
+    g = summarise(f, "BonusMalus")
+    g = g[g.Exposure > 100]
+    b.plotly_chart(px.line(g, x="BonusMalus", y="Claim Frequency", title="Claim frequency by bonus-malus (exposure > 100)",
+                           labels={"Claim Frequency": "Claims per policy-year"}), width="stretch")
+
+    st.subheader("Relationships (scatter plots)")
+    a, b = st.columns(2)
+    g = summarise(f, "Region")
+    a.plotly_chart(px.scatter(g, x="Claim Frequency", y="Pure Premium", size="Exposure", hover_name="Region",
+                              title="Regions: claim frequency vs pure premium (bubble = exposure)"), width="stretch")
+    g = summarise(f, "Density")
+    g = g[g.Exposure > 50]
+    b.plotly_chart(px.scatter(g, x="Density", y="Claim Frequency", log_x=True, size="Exposure", opacity=0.5,
+                              title="Population density vs claim frequency (log x-axis)",
+                              labels={"Density": "Inhabitants per km2"}), width="stretch")
+    g = summarise(f, ["DrivAge", "VehBrand"])
+    g = g[g.Exposure > 50]
+    st.plotly_chart(px.scatter(g, x="DrivAge", y="Pure Premium", color="VehBrand", size="Exposure", opacity=0.6,
+                               title="Driver age vs pure premium by vehicle brand"), width="stretch")
+
+    st.subheader("Distributions and combinations")
+    a, b = st.columns(2)
+    sev2 = pd.read_csv(SEV_PATH).merge(f[["IDpol", "VehBrand", "Area"]], on="IDpol")
+    sev2 = sev2[sev2.ClaimAmount < sev2.ClaimAmount.quantile(0.99)]
+    a.plotly_chart(px.box(sev2, x="VehBrand", y="ClaimAmount", title="Claim amount by vehicle brand (below 99th pct)",
+                          labels={"ClaimAmount": "Claim amount (EUR)"}), width="stretch")
+    b.plotly_chart(px.violin(sev2, x="Area", y="ClaimAmount", title="Claim amount by area (below 99th pct)",
+                             labels={"ClaimAmount": "Claim amount (EUR)"}), width="stretch")
+    hm = summarise(f, ["DriverAgeBand", "BonusMalusBand"]).pivot(index="DriverAgeBand", columns="BonusMalusBand",
+                                                                  values="Claim Frequency")
+    st.plotly_chart(px.imshow(hm, text_auto=".2f", aspect="auto", color_continuous_scale="YlOrRd",
+                              title="Claim frequency: driver age band x bonus-malus band"), width="stretch")
+    a, b = st.columns(2)
+    a.plotly_chart(px.pie(f.groupby("VehGas", as_index=False).Loss.sum(), names="VehGas", values="Loss",
+                          title="Share of total claim cost by fuel type"), width="stretch")
+    top = summarise(f, "Region").nlargest(8, "Loss")
+    b.plotly_chart(px.bar(top, x="Loss", y="Region", orientation="h", title="Top 8 regions by total claim cost (EUR)"),
+                   width="stretch")
 
 with tab4:
     st.subheader("Key findings (full portfolio, exposure-weighted)")
