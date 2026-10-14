@@ -80,8 +80,8 @@ k[2].metric("Claim frequency", f"{claims / exp:.1%}", help="Claims per policy-ye
 k[3].metric("Total claim cost (EUR)", f"{loss:,.0f}")
 k[4].metric("Pure premium (EUR/yr)", f"{loss / exp:,.0f}", help="Claim cost per policy-year of exposure")
 
-tab1, tab2, tab3, tab6, tab4, tab5 = st.tabs(
-    ["Overview", "Risk drivers", "Geography", "More charts", "Insights & Recommendations", "Data & Method"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["Overview", "Risk drivers", "Geography", "Insights & Recommendations", "Data & Method"])
 
 
 def bar_pair(col, title):
@@ -123,7 +123,7 @@ with tab3:
                            title="Pure premium by region (EUR per policy-year)"), width="stretch")
     st.caption("Regions with very low exposure (e.g. Champagne-Ardenne, Alsace, Franche-Comte) have volatile results.")
 
-with tab6:
+with tab1:
     st.subheader("Trends (line charts)")
     a, b = st.columns(2)
     g = summarise(f, "DrivAge")
