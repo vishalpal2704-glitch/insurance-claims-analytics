@@ -155,14 +155,7 @@ with tab1:
     st.plotly_chart(px.scatter(g, x="DrivAge", y="Pure Premium", color="VehBrand", size="Exposure", opacity=0.6,
                                title="Driver age vs pure premium by vehicle brand"), width="stretch")
 
-    st.subheader("Distributions and combinations")
-    a, b = st.columns(2)
-    sev2 = pd.read_csv(SEV_PATH).merge(f[["IDpol", "VehBrand", "Area"]], on="IDpol")
-    sev2 = sev2[sev2.ClaimAmount < sev2.ClaimAmount.quantile(0.99)]
-    a.plotly_chart(px.box(sev2, x="VehBrand", y="ClaimAmount", title="Claim amount by vehicle brand (below 99th pct)",
-                          labels={"ClaimAmount": "Claim amount (EUR)"}), width="stretch")
-    b.plotly_chart(px.violin(sev2, x="Area", y="ClaimAmount", title="Claim amount by area (below 99th pct)",
-                             labels={"ClaimAmount": "Claim amount (EUR)"}), width="stretch")
+    st.subheader("Combinations and shares")
     hm = summarise(f, ["DriverAgeBand", "BonusMalusBand"]).pivot(index="DriverAgeBand", columns="BonusMalusBand",
                                                                   values="Claim Frequency")
     st.plotly_chart(px.imshow(hm, text_auto=".2f", aspect="auto", color_continuous_scale="YlOrRd",
